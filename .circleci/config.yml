@@ -24,6 +24,7 @@ executors:
     docker:
       - image : prestocpp/prestocpp-avx-centos:kpai-20221018
     resource_class: 2xlarge
+    parallelism: 4
     environment:
       MAVEN_OPTS: "-Xmx4G -XX:+ExitOnOutOfMemoryError"
       MAVEN_INSTALL_OPTS: "-Xmx2G -XX:+ExitOnOutOfMemoryError"
@@ -65,7 +66,9 @@ jobs:
           command: |
             export PRESTO_SERVER_PATH="${HOME}/project/presto-native-execution/_build/debug/presto_cpp/main/presto_server"
             export TEMP_PATH="/tmp"
-            mvn test ${MAVEN_TEST} -pl 'presto-native-execution' -DPRESTO_SERVER=${PRESTO_SERVER_PATH} -DDATA_DIR=${TEMP_PATH} -Duser.timezone=America/Bahia_Banderas -T1C
+            TESTFILES=$(circleci tests glob "presto-native-execution/src/test/**/*Test.java" | circleci tests split)
+
+            mvn test -Dtest=$TESTFILES ${MAVEN_TEST} -pl 'presto-native-execution' -DPRESTO_SERVER=${PRESTO_SERVER_PATH} -DDATA_DIR=${TEMP_PATH} -Duser.timezone=America/Bahia_Banderas -T1C
 
   linux-parquet-S3-build:
     executor: build
