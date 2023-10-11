@@ -226,6 +226,7 @@ public class SpillableHashAggregationBuilder
         }
 
         if (!spiller.isPresent()) {
+            log.error(getId() + " spiller is EMPTY!!!");
             return hashAggregationBuilder.buildResult();
         }
 
@@ -268,10 +269,12 @@ public class SpillableHashAggregationBuilder
 
     private ListenableFuture<?> spillToDisk()
     {
+        log.error(new Throwable(), getId() + " spillToDisk called");
         checkState(hasPreviousSpillCompletedSuccessfully(), "Previous spill hasn't yet finished");
         hashAggregationBuilder.setOutputPartial();
 
         if (!spiller.isPresent()) {
+            log.error("spiller is EMPTY!!!");
             spiller = Optional.of(spillerFactory.create(
                     hashAggregationBuilder.buildTypes(),
                     operatorContext.getSpillContext(),
