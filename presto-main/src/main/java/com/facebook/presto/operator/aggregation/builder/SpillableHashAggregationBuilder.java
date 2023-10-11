@@ -170,7 +170,7 @@ public class SpillableHashAggregationBuilder
         if (producingOutput) {
             // All revocable memory has been released in buildResult method.
             // At this point, InMemoryHashAggregationBuilder is no longer accepting any input so no point in spilling.
-            log.error("localRevocableMemoryContext=%d localUserMemoryContext=%d", localRevocableMemoryContext.getBytes(), localUserMemoryContext.getBytes());
+            log.error("localRevocableMemoryContext=%d localUserMemoryContext=%d emptyHashAggregationBuilderSize=%d", localRevocableMemoryContext.getBytes(), localUserMemoryContext.getBytes(), emptyHashAggregationBuilderSize);
             verify(localRevocableMemoryContext.getBytes() == 0);
             return NOT_BLOCKED;
         }
