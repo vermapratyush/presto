@@ -359,7 +359,7 @@ public class MultiChannelGroupByHash
 
         // increase capacity, if necessary
         if (needRehash()) {
-            log.error(getId() + " rehashing");
+            log.error(getId() + " -- rehashing");
             tryRehash();
         }
         return groupId;
@@ -398,10 +398,10 @@ public class MultiChannelGroupByHash
         preallocatedMemoryInBytes = newCapacity * (long) (Long.BYTES + Integer.BYTES + Byte.BYTES) +
                 calculateMaxFill(newCapacity) * Long.BYTES +
                 currentPageSizeInBytes;
-        log.error(getId() + ("newCapacity=%d preallocatedMemoryInBytes=%d", newCapacity, preallocatedMemoryInBytes);
+        log.error(getId() + "-- newCapacity=%d preallocatedMemoryInBytes=%d", newCapacity, preallocatedMemoryInBytes);
 
         if (!updateMemory.update()) {
-            log.error(getId() + ("rehashing memory excceeded");
+            log.error(getId() + "-- rehashing memory excceeded");
             // reserved memory but has exceeded the limit
             return false;
         }
@@ -450,7 +450,7 @@ public class MultiChannelGroupByHash
         preallocatedMemoryInBytes = 0;
         // release temporary memory reservation
         updateMemory.update();
-        log.error(getId() + ("rehash succeeded");
+        log.error(getId() + "-- rehash succeeded");
         return true;
     }
 
