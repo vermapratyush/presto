@@ -203,7 +203,7 @@ public class SpillableHashAggregationBuilder
         if (localRevocableMemoryContext.getBytes() > 0) {
             long currentRevocableBytes = localRevocableMemoryContext.getBytes();
             localRevocableMemoryContext.setBytes(0);
-            log.error(getId() + "localRevocableMemoryContext NOW=%d WAS=%d localUserMemoryContext=%d", localRevocableMemoryContext.getBytes(), currentRevocableBytes, localUserMemoryContext.getBytes());
+            log.error(getId() + "localRevocableMemoryContext NOW=%d WAS=%d localUserMemoryContext=%d emptyHashAggregationBuilderSize=%d", localRevocableMemoryContext.getBytes(), currentRevocableBytes, localUserMemoryContext.getBytes(), emptyHashAggregationBuilderSize);
             if (!localUserMemoryContext.trySetBytes(localUserMemoryContext.getBytes() + currentRevocableBytes)) {
                 log.error(getId() + "Memory conversion from revocable to user failed, spilling. currentRevocableBytes=%d localUserMemoryContext=%d", currentRevocableBytes, localUserMemoryContext.getBytes());
                 // TODO: this might fail (even though we have just released memory), but we don't
@@ -237,6 +237,7 @@ public class SpillableHashAggregationBuilder
     @Override
     public void close()
     {
+        log.error(new Throwable(), "close called");
         try (Closer closer = Closer.create()) {
             if (hashAggregationBuilder != null) {
                 closer.register(hashAggregationBuilder::close);
