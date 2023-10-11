@@ -13,6 +13,7 @@
  */
 package com.facebook.presto.operator;
 
+import com.facebook.airlift.log.Logger;
 import com.facebook.presto.common.Page;
 import com.facebook.presto.common.PageBuilder;
 import com.facebook.presto.common.array.IntBigArray;
@@ -75,6 +76,7 @@ public class BigintGroupByHash
     private final UpdateMemory updateMemory;
     private long preallocatedMemoryInBytes;
     private long currentPageSizeInBytes;
+    private static final Logger log = Logger.get(BigintGroupByHash.class);
 
     public BigintGroupByHash(int hashChannel, boolean outputRawHash, int expectedSize, UpdateMemory updateMemory)
     {
@@ -263,6 +265,7 @@ public class BigintGroupByHash
 
         // increase capacity, if necessary
         if (needRehash()) {
+            log.error("REHASHING");
             tryRehash();
         }
         return groupId;
@@ -279,7 +282,10 @@ public class BigintGroupByHash
         // An estimate of how much extra memory is needed before we can go ahead and expand the hash table.
         // This includes the new capacity for values, groupIds, and valuesByGroupId as well as the size of the current page
         preallocatedMemoryInBytes = newCapacity * (long) (Long.BYTES + Integer.BYTES) + calculateMaxFill(newCapacity) * Long.BYTES + currentPageSizeInBytes;
+        log.error("newCapacity=%d preallocatedMemoryInBytes=%d", newCapacity, preallocatedMemoryInBytes);
+
         if (!updateMemory.update()) {
+            log.error("rehashing memory excceeded");
             // reserved memory but has exceeded the limit
             return false;
         }
@@ -321,6 +327,7 @@ public class BigintGroupByHash
         preallocatedMemoryInBytes = 0;
         // release temporary memory reservation
         updateMemory.update();
+        log.error("rehash succeeded");
         return true;
     }
 

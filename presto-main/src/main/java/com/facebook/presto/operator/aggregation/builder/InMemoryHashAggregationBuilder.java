@@ -13,6 +13,7 @@
  */
 package com.facebook.presto.operator.aggregation.builder;
 
+import com.facebook.airlift.log.Logger;
 import com.facebook.presto.common.Page;
 import com.facebook.presto.common.PageBuilder;
 import com.facebook.presto.common.block.BlockBuilder;
@@ -67,7 +68,7 @@ public class InMemoryHashAggregationBuilder
     private final Consumer<Long> memoryConsumer;
 
     private boolean full;
-
+    private static final Logger log = Logger.get(InMemoryHashAggregationBuilder.class);
     public InMemoryHashAggregationBuilder(
             List<AccumulatorFactory> accumulatorFactories,
             Step step,
@@ -139,6 +140,7 @@ public class InMemoryHashAggregationBuilder
             ReserveType reserveType,
             Optional<Consumer<Long>> memoryConsumer)
     {
+        log.error(new Throwable(), "creating InMemoryHashAggregationBuilder with reserveType " + reserveType.name() + " memoryConsumer is present=" + memoryConsumer.isPresent());
         // reserveType is REVOCABLE implies current InMemoryHashAggregationBuilder is built from SpillableHashAggregationBuilder
         //  and it will accept a customized memoryConsumer for memory update
         if (reserveType == ReserveType.REVOCABLE) {
@@ -371,6 +373,7 @@ public class InMemoryHashAggregationBuilder
     private boolean updateMemoryWithYieldInfo()
     {
         long memorySize = getSizeInMemory();
+        log.error(new Throwable(), " IN updateMemoryWithYieldInfo with memorySize=" + memorySize);
         if (partial && maxPartialMemory.isPresent()) {
             memoryConsumer.accept(memorySize);
             full = (memorySize > maxPartialMemory.getAsLong());
@@ -385,6 +388,7 @@ public class InMemoryHashAggregationBuilder
 
     private void updateMemory(long memorySize)
     {
+        log.error("updatingMemory with reserveType=%s", reserveType);
         switch (reserveType) {
             case USER:
                 localUserMemoryContext.setBytes(memorySize);
