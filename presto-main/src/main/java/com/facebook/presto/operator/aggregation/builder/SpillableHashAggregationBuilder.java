@@ -370,6 +370,6 @@ public class SpillableHashAggregationBuilder
     }
     private String getId()
     {
-        return operatorContext.getOperatorType() + "-" + operatorContext.getOperatorId() + ":";
+        return operatorContext.getOperatorType() + "-" + operatorContext.getOperatorId() + "-" + Thread.currentThread().getId() + ":";
     }
 }

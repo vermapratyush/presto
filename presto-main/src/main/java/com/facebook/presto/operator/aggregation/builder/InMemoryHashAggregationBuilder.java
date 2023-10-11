@@ -373,7 +373,7 @@ public class InMemoryHashAggregationBuilder
     private boolean updateMemoryWithYieldInfo()
     {
         long memorySize = getSizeInMemory();
-        log.error(new Throwable(), " IN updateMemoryWithYieldInfo with memorySize=" + memorySize);
+        log.error(new Throwable(), Thread.currentThread().getId() + ": IN updateMemoryWithYieldInfo with memorySize=" + memorySize);
         if (partial && maxPartialMemory.isPresent()) {
             memoryConsumer.accept(memorySize);
             full = (memorySize > maxPartialMemory.getAsLong());
@@ -388,7 +388,7 @@ public class InMemoryHashAggregationBuilder
 
     private void updateMemory(long memorySize)
     {
-        log.error("updatingMemory with reserveType=%s", reserveType);
+        log.error(getId() + "updatingMemory with reserveType=%s", reserveType);
         switch (reserveType) {
             case USER:
                 localUserMemoryContext.setBytes(memorySize);
@@ -498,5 +498,9 @@ public class InMemoryHashAggregationBuilder
             types.add(new Aggregator(factory, step, Optional.empty(), UpdateMemory.NOOP).getType());
         }
         return types.build();
+    }
+    private String getId()
+    {
+        return operatorContext.getOperatorType() + "-" + operatorContext.getOperatorId() + "-" + Thread.currentThread().getId() + ":";
     }
 }
