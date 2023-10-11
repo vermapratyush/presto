@@ -13,6 +13,7 @@
  */
 package com.facebook.presto.operator.aggregation.builder;
 
+import com.facebook.airlift.log.Logger;
 import com.facebook.presto.common.Page;
 import com.facebook.presto.common.type.Type;
 import com.facebook.presto.memory.context.LocalMemoryContext;
@@ -71,6 +72,7 @@ public class SpillableHashAggregationBuilder
     private long hashCollisions;
     private double expectedHashCollisions;
     private boolean producingOutput;
+    private static final Logger log = Logger.get(SpillableHashAggregationBuilder.class);
 
     public SpillableHashAggregationBuilder(
             List<AccumulatorFactory> accumulatorFactories,
@@ -118,10 +120,12 @@ public class SpillableHashAggregationBuilder
         if (producingOutput) {
             localRevocableMemoryContext.setBytes(0);
             localUserMemoryContext.setBytes(hashAggregationBuilder.getSizeInMemory());
+            log.error("localRevocableMemoryContext=0 localUserMemoryContext=%d", hashAggregationBuilder.getSizeInMemory());
             return;
         }
         localUserMemoryContext.setBytes(emptyHashAggregationBuilderSize);
         localRevocableMemoryContext.setBytes(hashAggregationBuilder.getSizeInMemory() - emptyHashAggregationBuilderSize);
+        log.error("localRevocableMemoryContext=%d localUserMemoryContext=%d", hashAggregationBuilder.getSizeInMemory() - emptyHashAggregationBuilderSize, emptyHashAggregationBuilderSize);
     }
 
     public long getSizeInMemory()
@@ -166,6 +170,7 @@ public class SpillableHashAggregationBuilder
         if (producingOutput) {
             // All revocable memory has been released in buildResult method.
             // At this point, InMemoryHashAggregationBuilder is no longer accepting any input so no point in spilling.
+            log.error("localRevocableMemoryContext=%d localUserMemoryContext=%d", localRevocableMemoryContext.getBytes(), localUserMemoryContext.getBytes());
             verify(localRevocableMemoryContext.getBytes() == 0);
             return NOT_BLOCKED;
         }
@@ -198,14 +203,18 @@ public class SpillableHashAggregationBuilder
         if (localRevocableMemoryContext.getBytes() > 0) {
             long currentRevocableBytes = localRevocableMemoryContext.getBytes();
             localRevocableMemoryContext.setBytes(0);
+            log.error("localRevocableMemoryContext NOW=%d WAS=%d localUserMemoryContext=%d", localRevocableMemoryContext.getBytes(), currentRevocableBytes, localUserMemoryContext.getBytes());
             if (!localUserMemoryContext.trySetBytes(localUserMemoryContext.getBytes() + currentRevocableBytes)) {
+                log.error("Memory conversion from revocable to user failed, spilling. currentRevocableBytes=%d localUserMemoryContext=%d", currentRevocableBytes, localUserMemoryContext.getBytes());
                 // TODO: this might fail (even though we have just released memory), but we don't
                 // have a proper way to atomically convert memory reservations
                 localRevocableMemoryContext.setBytes(currentRevocableBytes);
+                log.error("Before spill: localRevocableMemoryContext=%d localUserMemoryContext=%d", localRevocableMemoryContext.getBytes(), localUserMemoryContext.getBytes());
                 // spill since revocable memory could not be converted to user memory immediately
                 // TODO: this should be asynchronous
                 checkSpillSucceeded(spillToDisk());
                 updateMemory();
+                log.error("After Spill: localRevocableMemoryContext=%d localUserMemoryContext=%d", localRevocableMemoryContext.getBytes(), localUserMemoryContext.getBytes());
             }
         }
 
@@ -231,8 +240,15 @@ public class SpillableHashAggregationBuilder
             }
             merger.ifPresent(closer::register);
             spiller.ifPresent(closer::register);
-            closer.register(() -> localUserMemoryContext.setBytes(0));
-            closer.register(() -> localRevocableMemoryContext.setBytes(0));
+
+            closer.register(() -> {
+                log.error("closing... setting localUserMemoryContext to 0");
+                localUserMemoryContext.setBytes(0);
+            });
+            closer.register(() -> {
+                log.error("closing... setting localRevocableMemoryContext to 0");
+                localRevocableMemoryContext.setBytes(0);
+            });
         }
         catch (IOException e) {
             throw new RuntimeException(e);
@@ -335,7 +351,10 @@ public class SpillableHashAggregationBuilder
                 Optional.of(DataSize.succinctBytes(0)),
                 joinCompiler,
                 false,
-                Optional.of((memorySize) -> localRevocableMemoryContext.setBytes(memorySize)));
+                Optional.of((memorySize) -> {
+                    log.error("lambda execution... setting localRevocableMemoryContext to %d", memorySize);
+                    localRevocableMemoryContext.setBytes(memorySize);
+                }));
         emptyHashAggregationBuilderSize = hashAggregationBuilder.getSizeInMemory();
     }
 }
