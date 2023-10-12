@@ -18,6 +18,7 @@ import com.facebook.presto.common.Page;
 import com.facebook.presto.common.PageBuilder;
 import com.facebook.presto.common.block.BlockBuilder;
 import com.facebook.presto.common.type.Type;
+import com.facebook.presto.common.type.encoding.StringUtils;
 import com.facebook.presto.memory.context.LocalMemoryContext;
 import com.facebook.presto.operator.GroupByHash;
 import com.facebook.presto.operator.HashAggregationOperator.ReserveType;
@@ -52,6 +53,7 @@ import static com.facebook.presto.SystemSessionProperties.isDictionaryAggregatio
 import static com.facebook.presto.common.type.BigintType.BIGINT;
 import static com.facebook.presto.operator.GroupByHash.createGroupByHash;
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class InMemoryHashAggregationBuilder
@@ -500,8 +502,9 @@ public class InMemoryHashAggregationBuilder
         }
         return types.build();
     }
+    
     private String getId()
     {
-        return operatorContext.getOperatorType() + "-" + this.partial + "-" + operatorContext.getOperatorId() + "-" + Thread.currentThread().getId() + ":";
+        return format("%s-%s-%d-%d:", operatorContext.getOperatorType(), this.partial, operatorContext.getOperatorId(), Thread.currentThread().getId());
     }
 }
