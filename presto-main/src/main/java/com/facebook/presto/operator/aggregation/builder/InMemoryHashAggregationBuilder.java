@@ -140,7 +140,7 @@ public class InMemoryHashAggregationBuilder
             ReserveType reserveType,
             Optional<Consumer<Long>> memoryConsumer)
     {
-        log.error(new Throwable(), "creating InMemoryHashAggregationBuilder with reserveType " + reserveType.name() + " memoryConsumer is present=" + memoryConsumer.isPresent());
+        log.error(new Throwable(), getId() + " creating InMemoryHashAggregationBuilder with reserveType " + reserveType.name() + " memoryConsumer is present=" + memoryConsumer.isPresent());
         // reserveType is REVOCABLE implies current InMemoryHashAggregationBuilder is built from SpillableHashAggregationBuilder
         //  and it will accept a customized memoryConsumer for memory update
         if (reserveType == ReserveType.REVOCABLE) {
@@ -373,7 +373,7 @@ public class InMemoryHashAggregationBuilder
     private boolean updateMemoryWithYieldInfo()
     {
         long memorySize = getSizeInMemory();
-        log.error(new Throwable(), Thread.currentThread().getId() + ": IN updateMemoryWithYieldInfo with memorySize=" + memorySize);
+        log.error(new Throwable(), getId() + ": IN updateMemoryWithYieldInfo with memorySize=" + memorySize);
         if (partial && maxPartialMemory.isPresent()) {
             memoryConsumer.accept(memorySize);
             full = (memorySize > maxPartialMemory.getAsLong());

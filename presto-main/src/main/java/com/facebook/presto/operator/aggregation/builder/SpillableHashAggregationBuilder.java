@@ -245,7 +245,7 @@ public class SpillableHashAggregationBuilder
     @Override
     public void close()
     {
-        log.error(new Throwable(), "close called");
+        log.error(new Throwable(),getId() +  " close called");
         try (Closer closer = Closer.create()) {
             if (hashAggregationBuilder != null) {
                 closer.register(hashAggregationBuilder::close);
@@ -274,7 +274,7 @@ public class SpillableHashAggregationBuilder
         hashAggregationBuilder.setOutputPartial();
 
         if (!spiller.isPresent()) {
-            log.error("spiller is EMPTY!!!");
+            log.error(getId() + " spiller is EMPTY!!!");
             spiller = Optional.of(spillerFactory.create(
                     hashAggregationBuilder.buildTypes(),
                     operatorContext.getSpillContext(),
