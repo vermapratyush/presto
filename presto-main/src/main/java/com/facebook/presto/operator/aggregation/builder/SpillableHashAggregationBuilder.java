@@ -339,6 +339,7 @@ public class SpillableHashAggregationBuilder
                 operatorContext,
                 sortedPages,
                 operatorContext.newLocalSystemMemoryContext(SpillableHashAggregationBuilder.class.getSimpleName()),
+                localUserMemoryContext,
                 memoryLimitForMerge,
                 hashAggregationBuilder.getKeyChannels(),
                 joinCompiler));

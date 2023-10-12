@@ -13,6 +13,7 @@
  */
 package com.facebook.presto.operator.aggregation.builder;
 
+import com.facebook.airlift.log.Logger;
 import com.facebook.presto.common.Page;
 import com.facebook.presto.common.type.Type;
 import com.facebook.presto.memory.context.LocalMemoryContext;
@@ -46,9 +47,11 @@ public class MergingHashAggregationBuilder
     private InMemoryHashAggregationBuilder hashAggregationBuilder;
     private final List<Type> groupByTypes;
     private final LocalMemoryContext systemMemoryContext;
+    private final LocalMemoryContext localUserMemoryContext;
     private final long memoryLimitForMerge;
     private final int overwriteIntermediateChannelOffset;
     private final JoinCompiler joinCompiler;
+    private static final Logger log = Logger.get(MergingHashAggregationBuilder.class);
 
     public MergingHashAggregationBuilder(
             List<AccumulatorFactory> accumulatorFactories,
@@ -59,6 +62,7 @@ public class MergingHashAggregationBuilder
             OperatorContext operatorContext,
             WorkProcessor<Page> sortedPages,
             LocalMemoryContext systemMemoryContext,
+            LocalMemoryContext localUserMemoryContext,
             long memoryLimitForMerge,
             int overwriteIntermediateChannelOffset,
             JoinCompiler joinCompiler)
@@ -77,6 +81,7 @@ public class MergingHashAggregationBuilder
         this.sortedPages = sortedPages;
         this.groupByTypes = groupByTypes;
         this.systemMemoryContext = systemMemoryContext;
+        this.localUserMemoryContext = localUserMemoryContext;
         this.memoryLimitForMerge = memoryLimitForMerge;
         this.overwriteIntermediateChannelOffset = overwriteIntermediateChannelOffset;
         this.joinCompiler = joinCompiler;
@@ -152,6 +157,13 @@ public class MergingHashAggregationBuilder
                 joinCompiler,
                 false,
                 ReserveType.USER,
-                Optional.empty());
+                Optional.of((memorySize) -> {
+                    log.error(getId() + " lambda execution... updating localUserMemoryContext=" + memorySize);
+                    localUserMemoryContext.setBytes(memorySize);
+                }));
+    }
+    private String getId()
+    {
+        return operatorContext.getOperatorType() + "-" + step.isOutputPartial() + "-" + operatorContext.getOperatorId() + "-" + Thread.currentThread().getId() + ":";
     }
 }
