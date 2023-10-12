@@ -375,6 +375,7 @@ public class InMemoryHashAggregationBuilder
         long memorySize = getSizeInMemory();
         log.error(new Throwable(), getId() + ": IN updateMemoryWithYieldInfo with memorySize=" + memorySize);
         if (partial && maxPartialMemory.isPresent()) {
+            log.error(getId(), " updateMemoryWithYieldInfo maxPartitialMemory=" + maxPartialMemory.isPresent());
             memoryConsumer.accept(memorySize);
             full = (memorySize > maxPartialMemory.getAsLong());
             return true;
