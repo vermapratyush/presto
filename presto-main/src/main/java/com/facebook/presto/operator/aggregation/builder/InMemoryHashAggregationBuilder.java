@@ -140,7 +140,7 @@ public class InMemoryHashAggregationBuilder
             ReserveType reserveType,
             Optional<Consumer<Long>> memoryConsumer)
     {
-        log.error(new Throwable(), getId() + " creating InMemoryHashAggregationBuilder with reserveType " + reserveType.name() + " memoryConsumer is present=" + memoryConsumer.isPresent());
+        log.error(new Throwable(), getId() + " creating InMemoryHashAggregationBuilder with reserveType " + reserveType.name() + " memoryConsumer is present=" + memoryConsumer.isPresent() + "--- is partial = " + step.isOutputPartial());
         // reserveType is REVOCABLE implies current InMemoryHashAggregationBuilder is built from SpillableHashAggregationBuilder
         //  and it will accept a customized memoryConsumer for memory update
         if (reserveType == ReserveType.REVOCABLE) {
