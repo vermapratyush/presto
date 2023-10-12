@@ -501,6 +501,6 @@ public class InMemoryHashAggregationBuilder
     }
     private String getId()
     {
-        return operatorContext.getOperatorType() + "-" + operatorContext.getOperatorId() + "-" + Thread.currentThread().getId() + ":";
+        return operatorContext.getOperatorType() + "-" + this.partial + "-" + operatorContext.getOperatorId() + "-" + Thread.currentThread().getId() + ":";
     }
 }

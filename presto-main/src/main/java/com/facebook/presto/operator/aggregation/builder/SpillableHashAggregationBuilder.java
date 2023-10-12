@@ -245,7 +245,7 @@ public class SpillableHashAggregationBuilder
     @Override
     public void close()
     {
-        log.error(new Throwable(),getId() +  " close called");
+        log.error(new Throwable(), getId() + " close called");
         try (Closer closer = Closer.create()) {
             if (hashAggregationBuilder != null) {
                 closer.register(hashAggregationBuilder::close);
@@ -373,6 +373,6 @@ public class SpillableHashAggregationBuilder
     }
     private String getId()
     {
-        return operatorContext.getOperatorType() + "-" + operatorContext.getOperatorId() + "-" + Thread.currentThread().getId() + ":";
+        return operatorContext.getOperatorType() + "-" + step.isOutputPartial() + "-" + operatorContext.getOperatorId() + "-" + Thread.currentThread().getId() + ":";
     }
 }
