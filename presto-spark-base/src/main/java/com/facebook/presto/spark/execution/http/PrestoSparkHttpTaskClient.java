@@ -209,6 +209,7 @@ public class PrestoSparkHttpTaskClient
                 outputBuffers,
                 writeInfo);
         BatchTaskUpdateRequest batchTaskUpdateRequest = new BatchTaskUpdateRequest(updateRequest, shuffleWriteInfo, broadcastBasePath);
+        log.error(taskUpdateRequestCodec.toJson(batchTaskUpdateRequest));
 
         URI batchTaskUri = uriBuilderFrom(taskUri)
                 .appendPath("batch")
