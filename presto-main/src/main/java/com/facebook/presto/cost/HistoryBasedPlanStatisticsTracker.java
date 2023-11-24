@@ -247,6 +247,7 @@ public class HistoryBasedPlanStatisticsTracker
         PlanNodeStats childNodeStats = planNodeStatsMap.get(childNode.getId());
         if (childNodeStats != null) {
             double partialAggregationInputBytes = adjustedOutputBytes(childNode, childNodeStats);
+            LOG.error("partialAggregationInputBytes: %s: %s: %d", childNode.getId().toString(), childNode.toString(), childNodeStats.getPlanNodeOutputDataSize().toBytes());
             return new PartialAggregationStatistics(Estimate.of(partialAggregationInputBytes),
                     Estimate.of(outputBytes),
                     Estimate.of(childNodeStats.getPlanNodeOutputPositions()),
@@ -272,6 +273,14 @@ public class HistoryBasedPlanStatisticsTracker
         outputBytes -= planNode.getOutputVariables().stream()
                 .mapToDouble(variable -> variable.getType() instanceof FixedWidthType ? outputPositions * ((FixedWidthType) variable.getType()).getFixedSize() : 0)
                 .sum();
+        planNode.getOutputVariables().forEach(variable -> {
+            if (variable.getType() instanceof FixedWidthType) {
+                LOG.error("SUB variable: %s %d", variable.getType().getDisplayName(), ((FixedWidthType) variable.getType()).getFixedSize());
+            }
+            else {
+                LOG.error("SUB !instanceof, hence 0");
+            }
+        });
         // partial aggregation nodes have no stats equivalent plan node: use original output variables
         List<VariableReferenceExpression> outputVariables = planNode.getOutputVariables();
         if (planNode.getStatsEquivalentPlanNode().isPresent()) {
@@ -280,12 +289,21 @@ public class HistoryBasedPlanStatisticsTracker
         outputBytes += outputVariables.stream()
                 .mapToDouble(variable -> variable.getType() instanceof FixedWidthType ? outputPositions * ((FixedWidthType) variable.getType()).getFixedSize() : 0)
                 .sum();
+        planNode.getOutputVariables().forEach(variable -> {
+            if (variable.getType() instanceof FixedWidthType) {
+                LOG.error("ADD variable: %s %d", variable.getType().getDisplayName(), ((FixedWidthType) variable.getType()).getFixedSize());
+            }
+            else {
+                LOG.error("ADD !instanceof, hence 0");
+            }
+        });
         // annotate illegal cases with NaN: if outputBytes is less than 0, or if there is at least 1 output row but less than 1 output byte
         // Note that this function may be called for partial aggs that produce no output columns (e.g. "select count(*)"), where 0 is a valid number of output bytes, in this case
         // the ouptput variables is an empty list
         if (outputBytes < 0 || (outputPositions > 0 && outputBytes < 1 && !outputVariables.isEmpty())) {
             outputBytes = Double.NaN;
         }
+        LOG.error("adjustedOutputBytes: outputBytes: %f, outputPosition: %f, outputVariables: %d", outputBytes, outputPositions, outputVariables.size());
         return outputBytes;
     }
 
